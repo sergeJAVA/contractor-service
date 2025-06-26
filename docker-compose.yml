@@ -1,0 +1,11 @@
+services:
+  postgres:
+    container_name: contractorPostgresDB
+    image: postgres:17.4
+    restart: always
+    environment:
+      POSTGRES_DB: contractorDB
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: pass
+    ports:
+      - "5432:5432"

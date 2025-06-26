@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: contractor-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/contractorDB
+    username: root
+    password: pass
+    driverClassName: org.postgresql.Driver
+  liquibase:
+    enabled: false
