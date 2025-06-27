@@ -1,4 +1,4 @@
-package com.example.contractor_service.data;
+package com.example.contractor_service.util;
 
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
