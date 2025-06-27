@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_country_table
+      author: sergej
+      sqlFile:
+        path: 001_create_country_table.sql
+        encoding: UTF-8
+        relativeToChangeLogFile: true
+  - changeSet:
+      id: create_industry_table
+      author: sergej
+      sqlFile:
+        path: 002_create_industry_table.sql
+        encoding: UTF-8
+        relativeToChangeLogFile: true
+  - changeSet:
+      id: create_org_form_table
+      author: sergej
+      sqlFile:
+        path: 003_create_org_form_table.sql
+        encoding: UTF-8
+        relativeToChangeLogFile: true
+  - changeSet:
+      id: create_contractor_table
+      author: sergej
+      sqlFile:
+        path: 004_create_contractor_table.sql
+        encoding: UTF-8
+        relativeToChangeLogFile: true
