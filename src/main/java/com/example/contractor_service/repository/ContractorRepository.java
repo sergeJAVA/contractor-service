@@ -207,7 +207,7 @@ public class ContractorRepository {
      * @param filters Карта (Map) фильтров, где ключ - имя поля, значение - критерий поиска.
      * @return Общее количество активных подрядчиков, соответствующих фильтрам.
      */
-    public int countSearch(java.util.Map<String, String> filters) {
+    public int countSearch(Map<String, String> filters) {
         StringBuilder sqlBuilder = new StringBuilder();
         sqlBuilder.append("SELECT COUNT(*) ")
                 .append("FROM contractor c ")

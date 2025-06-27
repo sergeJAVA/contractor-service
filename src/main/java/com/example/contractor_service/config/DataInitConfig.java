@@ -1,6 +1,6 @@
 package com.example.contractor_service.config;
 
-import com.example.contractor_service.data.DataLoader;
+import com.example.contractor_service.util.DataLoader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
