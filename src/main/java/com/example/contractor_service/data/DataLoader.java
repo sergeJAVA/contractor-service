@@ -10,6 +10,16 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Утилитарный класс для загрузки данных из CSV-файлов в базу данных с использованием {@link JdbcTemplate}.
+ * Класс предназначен для однократной загрузки данных при старте приложения,
+ * проверяя наличие данных в таблице перед началом загрузки.
+ * Поддерживает специфический формат CSV, где поле ID отделено от поля NAME
+ * точкой с запятой. Также учитывает, является ли таблица таблицей country или
+ * другой таблицей, куда вставляется только NAME, а ID генерируется с помощью автоинкрементации.
+ *
+ * @author sergeJAVA
+ */
 public class DataLoader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataLoader.class);
@@ -20,6 +30,15 @@ public class DataLoader {
     private boolean isCountryTable;
     private static final String START_PATH = "src/main/resources/db/changelog/data/";
 
+    /**
+     * Конструктор для создания экземпляра {@link DataLoader}.
+     *
+     * @param jdbcTemplate   Экземпляр {@link JdbcTemplate} для взаимодействия с базой данных.
+     * @param fileName       Имя CSV-файла, из которого будут загружаться данные.
+     * @param tableName      Имя таблицы в базе данных, куда будут загружаться данные.
+     * <p>isCountryTable Флаг, указывающий, является ли целевая таблица таблицей стран.
+     *  Если true, вставляются ID и NAME. Если false, вставляется только NAME.</p>
+     */
     public DataLoader(JdbcTemplate jdbcTemplate,
                       String fileName, String tableName,
                       boolean isCountryId) {
@@ -29,10 +48,17 @@ public class DataLoader {
         this.isCountryTable = isCountryId;
     }
 
+    /**
+     * Метод, выполняемый после инициализации бина Spring.
+     * Отвечает за загрузку данных из CSV-файла в соответствующую таблицу базы данных.
+     * Проверяет, существуют ли уже данные в таблице, чтобы избежать повторной загрузки.
+     * Обрабатывает специфический формат CSV, где первое поле до точки с запятой - ID,
+     * а все остальное - NAME.
+     *
+     * @throws IOException Если возникает ошибка при чтении CSV-файла.
+     */
     @PostConstruct
     public void loadData() {
-        // Проверяем, были ли данные уже загружены
-        // Это предотвратит повторную загрузку при каждом запуске приложения
         try {
             Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + tableName, Integer.class);
             if (count != null && count > 0) {
@@ -67,11 +93,11 @@ public class DataLoader {
                 String name = parts[1].trim();
 
                 if (isCountryTable) {
-                    // Выполнение INSERT запроса через JdbcTemplate для таблица country
+                    // Выполнение INSERT запроса через JdbcTemplate для таблицы country
                     String sql = String.format("INSERT INTO %s (id, name) VALUES (?, ?)", tableName);
                     jdbcTemplate.update(sql, id, name);
                 } else {
-                    // Выполнение INSERT запроса через JdbcTemplate
+                    // Выполнение INSERT запроса через JdbcTemplate для других таблиц
                     String sql = String.format("INSERT INTO %s (name) VALUES (?)", tableName);
                     jdbcTemplate.update(sql, name);
                 }
@@ -89,6 +115,18 @@ public class DataLoader {
         }
     }
 
+    /**
+     * Вспомогательный метод для парсинга одной строки CSV.
+     * Предназначен для CSV-файлов с двумя полями, разделенными заданным {@code separator}.
+     * Корректно обрабатывает случай, когда второе поле (NAME) содержит символ-разделитель (запятую),
+     * так как оно не обрамляется кавычками.
+     * Если второе поле равно "-", возвращает пустой массив строк, что будет проигнорировано вызывающим методом.
+     *
+     * @param line      Строка из CSV-файла для парсинга.
+     * @param separator Символ-разделитель полей в строке (например, ";").
+     * @return Массив строк, содержащий ID и NAME, или пустой массив, если NAME равно "-".
+     * @throws IOException Если в строке не найден разделитель, что указывает на некорректную структуру файла.
+     */
     private String[] splitCsvLine(String line, String separator) throws IOException {
         int separatorIndex = line.indexOf(separator);
         if (separatorIndex == -1) {
