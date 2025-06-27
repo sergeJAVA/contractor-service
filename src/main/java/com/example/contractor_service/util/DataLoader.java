@@ -103,7 +103,7 @@ public class DataLoader {
                 }
 
             }
-            LOGGER.info("Данные о стране успешно загружены.");
+            LOGGER.info("Данные в таблицу \"" + tableName + "\" успешно инициализированы.");
 
         } catch (IOException e) {
             LOGGER.error("Ошибка при загрузке данных о странах из CSV: " + e.getMessage());

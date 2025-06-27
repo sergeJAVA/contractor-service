@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.util.List;
 
+/**
+ * REST контроллер для управления справочником "country".
+ *
+ * @author sergeJAVA
+ */
 @RestController
 @RequestMapping("/country")
 public class CountryController {

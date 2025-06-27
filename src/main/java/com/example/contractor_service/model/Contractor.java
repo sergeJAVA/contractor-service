@@ -33,7 +33,7 @@ public class Contractor {
     private String modifyUserId;
     private Boolean isActive;
 
-    // JOIN поля
+    // поля для поиска
     private String countryName;
     private String industryName;
     private String orgFormName;
