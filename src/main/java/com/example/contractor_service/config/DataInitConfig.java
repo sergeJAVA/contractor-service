@@ -33,11 +33,11 @@ public class DataInitConfig {
     }
 
     /**
-     * Создает бин {@link DataLoader} для загрузки данных в таблицу "org_form" из файла "org_form.csv".
+     * Создает бин {@link DataLoader} для загрузки данных в таблицу "industry" из файла "industry.csv".
      * Для этой таблицы предполагается, что первое поле (ID) не используется для вставки,
      * а вставляется только второе поле (name), так как isCountryId установлено в false.
      *
-     * @return Экземпляр {@link DataLoader} для таблицы "org_form".
+     * @return Экземпляр {@link DataLoader} для таблицы "industry".
      */
     @Bean
     public DataLoader industryTable() {

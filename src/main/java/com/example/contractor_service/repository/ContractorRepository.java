@@ -76,7 +76,7 @@ public class ContractorRepository {
                     contractor.getParentId(), contractor.getName(), contractor.getNameFull(),
                     contractor.getInn(), contractor.getOgrn(),
                     contractor.getCountryId(), contractor.getIndustryId(), contractor.getOrgFormId(),
-                    "sergej", // modify_user_id
+                    "sergej",
                     contractor.getId());
         } else {
             // Вставка нового контрагента
@@ -109,7 +109,7 @@ public class ContractorRepository {
     public int delete(String id) {
         String sql = "UPDATE contractor SET is_active = FALSE, modify_date = NOW(), modify_user_id = ? WHERE id = ?";
 
-        return jdbcTemplate.update(sql, "sergejMod", id);
+        return jdbcTemplate.update(sql, "sergej", id);
     }
 
     /**
