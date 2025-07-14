@@ -168,6 +168,11 @@ public class ContractorRepository {
                     params.add("%" + value + "%");
                 }
 
+                case "countryId" -> {
+                    sqlBuilder.append(" AND co.id = ?");
+                    params.add(value);
+                }
+
                 case "industry" -> {
                     // Точное совпадение
                     sqlBuilder.append(" AND c.industry = ?");
