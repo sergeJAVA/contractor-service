@@ -67,14 +67,20 @@ public class UIContractorController {
     })
     @PutMapping("/save")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'CONTRACTOR_SUPERUSER')")
-    public ResponseEntity<Contractor> saveContractor(@RequestBody Contractor contractor) {
+    public ResponseEntity<Contractor> saveContractor(@RequestBody Contractor contractor,
+                                                     Authentication authentication) {
+
+        TokenAuthentication tokenAuthentication = (TokenAuthentication) authentication;
+        TokenData tokenData = tokenAuthentication.getTokenData();
+
+
         if (contractor.getId() == null || contractor.getId().isEmpty()) {
             return ResponseEntity.badRequest().body(null); // ID должен быть предоставлен
         }
 
         Optional<Contractor> existingContractor = contractorService.findById(contractor.getId());
 
-        Contractor savedContractor = contractorService.save(contractor);
+        Contractor savedContractor = contractorService.save(contractor, tokenData.getId());
 
         if (existingContractor.isEmpty()) {
             return new ResponseEntity<>(savedContractor, HttpStatus.CREATED);

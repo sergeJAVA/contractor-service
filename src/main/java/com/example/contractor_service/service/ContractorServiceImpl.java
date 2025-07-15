@@ -26,6 +26,11 @@ public class ContractorServiceImpl implements ContractorService {
     }
 
     @Override
+    public Contractor save(Contractor contractor, Long userId) {
+        return contractorRepository.save(contractor, userId);
+    }
+
+    @Override
     public int delete(String id) {
         return contractorRepository.delete(id);
     }
