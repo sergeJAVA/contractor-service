@@ -32,13 +32,7 @@ public class SecurityConfig {
         return http
                 .authorizeHttpRequests(request ->
                         request
-                                .requestMatchers("/ui/country/all",
-                                        "/ui/country/{id}",
-                                        "/ui/contractor/{id}",
-                                        "/ui/industry/all",
-                                        "/ui/industry/{id}",
-                                        "/ui/org_form/all",
-                                        "/ui/org_form/{id}").authenticated()
+                                .requestMatchers("/ui/**").authenticated()
                                 .anyRequest().permitAll())
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers(headersConfigurer ->
