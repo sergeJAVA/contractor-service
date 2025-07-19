@@ -71,7 +71,6 @@ public class ContractorRepository {
                     "modify_date = NOW(), modify_user_id = ? " + // Обновляем служебные поля
                     "WHERE id = ?";
 
-            // ставим заглушку 'sergej'
             jdbcTemplate.update(sql,
                     contractor.getParentId(), contractor.getName(), contractor.getNameFull(),
                     contractor.getInn(), contractor.getOgrn(),
@@ -97,6 +96,44 @@ public class ContractorRepository {
         // Возвращаем контрагента, возможно, с обновленными служебными полями, если они были считаны
         // Для этого можно было бы сделать findById после save/update, но это добавляет еще один запрос.
         // Для простоты, возвращаем исходный объект.
+        return contractor;
+    }
+
+    public Contractor save(Contractor contractor, Long userId) {
+        // Проверяем, существует ли контрагент с таким ID
+        String checkSql = "SELECT COUNT(*) FROM contractor WHERE id = ?";
+        Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, contractor.getId());
+
+        if (count != null && count > 0) {
+            // Обновление существующего контрагента
+            String sql = "UPDATE contractor SET " +
+                    "parent_id = ?, name = ?, name_full = ?, inn = ?, ogrn = ?, " +
+                    "country = ?, industry = ?, org_form = ?, " +
+                    "modify_date = NOW(), modify_user_id = ? " + // Обновляем служебные поля
+                    "WHERE id = ?";
+
+            jdbcTemplate.update(sql,
+                    contractor.getParentId(), contractor.getName(), contractor.getNameFull(),
+                    contractor.getInn(), contractor.getOgrn(),
+                    contractor.getCountryId(), contractor.getIndustryId(), contractor.getOrgFormId(),
+                    userId,
+                    contractor.getId());
+        } else {
+            // Вставка нового контрагента
+            String sql = "INSERT INTO contractor (" +
+                    "id, parent_id, name, name_full, inn, ogrn, " +
+                    "country, industry, org_form, " +
+                    "create_date, modify_date, create_user_id, modify_user_id, is_active" +
+                    ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?, ?, TRUE)"; // DEFAULT TRUE для is_active
+
+            jdbcTemplate.update(sql,
+                    contractor.getId(), contractor.getParentId(), contractor.getName(),
+                    contractor.getNameFull(), contractor.getInn(), contractor.getOgrn(),
+                    contractor.getCountryId(), contractor.getIndustryId(), contractor.getOrgFormId(),
+                    userId, userId
+            );
+        }
+
         return contractor;
     }
 
@@ -166,6 +203,11 @@ public class ContractorRepository {
                     // Частичное совпадение по country.name
                     sqlBuilder.append(" AND LOWER(co.name) LIKE LOWER(?)");
                     params.add("%" + value + "%");
+                }
+
+                case "countryId" -> {
+                    sqlBuilder.append(" AND co.id = ?");
+                    params.add(value);
                 }
 
                 case "industry" -> {

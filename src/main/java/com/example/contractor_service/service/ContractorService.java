@@ -63,4 +63,6 @@ public interface ContractorService {
      */
     int countSearch(java.util.Map<String, String> filters);
 
+    Contractor save(Contractor contractor, Long userId);
+
 }
