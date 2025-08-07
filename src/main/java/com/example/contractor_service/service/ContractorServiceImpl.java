@@ -2,6 +2,7 @@ package com.example.contractor_service.service;
 
 import com.example.contractor_service.model.Contractor;
 import com.example.contractor_service.repository.ContractorRepository;
+import com.webbee.audit_lib.annotation.AuditLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,11 +22,13 @@ public class ContractorServiceImpl implements ContractorService {
     }
 
     @Override
+    @AuditLog
     public Contractor save(Contractor contractor) {
         return contractorRepository.save(contractor);
     }
 
     @Override
+    @AuditLog
     public Contractor save(Contractor contractor, Long userId) {
         return contractorRepository.save(contractor, userId);
     }
