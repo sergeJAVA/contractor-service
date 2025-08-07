@@ -12,3 +12,10 @@ spring:
 
 jwt:
   secret: secretkeyPasswordForAuth12312312312313213123123sdfsdf
+
+audit:
+  kafka:
+    enabled: true
+    topic: audit-log
+    bootstrap:
+      server: localhost:9092
