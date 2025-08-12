@@ -4,6 +4,7 @@ import com.example.contractor_service.model.Contractor;
 import com.example.contractor_service.model.SearchRequest;
 import com.example.contractor_service.model.SearchResponse;
 import com.example.contractor_service.service.ContractorService;
+import com.example.contractor_service.service.rabbit.SendMessageRabbitService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -39,6 +40,7 @@ import java.util.Optional;
 public class ContractorController {
 
     private final ContractorService contractorService;
+    private final SendMessageRabbitService sendMessageRabbitService;
 
     @Operation(summary = "Получить контрагента по ID", description = "Возвращает информацию о контрагенте по его уникальному идентификатору, включая связанные данные.")
     @ApiResponses(value = {
@@ -73,6 +75,7 @@ public class ContractorController {
         Optional<Contractor> existingContractor = contractorService.findById(contractor.getId());
 
         Contractor savedContractor = contractorService.save(contractor);
+        sendMessageRabbitService.sendUpdatedContractor(savedContractor);
 
         if (existingContractor.isEmpty()) {
             return new ResponseEntity<>(savedContractor, HttpStatus.CREATED);
