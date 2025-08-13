@@ -75,7 +75,9 @@ public class ContractorController {
         Optional<Contractor> existingContractor = contractorService.findById(contractor.getId());
 
         Contractor savedContractor = contractorService.save(contractor);
-        sendMessageRabbitService.sendUpdatedContractor(savedContractor);
+
+        Optional<Contractor> updated = contractorService.findById(savedContractor.getId());
+        updated.ifPresent(sendMessageRabbitService::sendUpdatedContractor);
 
         if (existingContractor.isEmpty()) {
             return new ResponseEntity<>(savedContractor, HttpStatus.CREATED);
