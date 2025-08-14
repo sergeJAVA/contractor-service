@@ -15,7 +15,7 @@ public class SendMessageRabbitService {
 
     public void sendUpdatedContractor(Contractor updated) {
         rabbitTemplate.convertAndSend(updated);
-        log.info("Contractor sent to the <<deals_dead_contractor_queue>> queue");
+        log.info("Contractor sent to the <<deals_contractor_queue>> queue");
     }
 
 }
