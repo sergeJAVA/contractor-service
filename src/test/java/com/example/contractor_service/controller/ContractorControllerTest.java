@@ -1,6 +1,7 @@
 package com.example.contractor_service.controller;
 
 import com.example.contractor_service.model.*;
+import com.example.contractor_service.service.rabbit.SendMessageRabbitService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -17,6 +19,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -31,6 +36,9 @@ public class ContractorControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoSpyBean
+    private SendMessageRabbitService sendMessageRabbitService;
 
     @Test
     @DisplayName("Должен создать нового контрагента и вернуть 201 CREATED")
@@ -51,6 +59,8 @@ public class ContractorControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value("NEW_CONTR"))
                 .andExpect(jsonPath("$.name").value("Новый Контрагент"));
+
+        verify(sendMessageRabbitService, times(1)).sendUpdatedContractor(any(Contractor.class));
     }
 
     @Test
@@ -103,6 +113,8 @@ public class ContractorControllerTest {
                 .andExpect(jsonPath("$.countryName").value("Абхазия"))
                 .andExpect(jsonPath("$.industryName").value("Строительство"))
                 .andExpect(jsonPath("$.orgFormName").value("АО"));
+
+        verify(sendMessageRabbitService, times(2)).sendUpdatedContractor(any(Contractor.class));
     }
 
     @Test
@@ -173,6 +185,7 @@ public class ContractorControllerTest {
         SearchResponse response = objectMapper.readValue(result.getResponse().getContentAsString(), SearchResponse.class);
         assertThat(response.getContractors()).isEmpty();
         assertThat(response.getTotalElements()).isEqualTo(0);
+        verify(sendMessageRabbitService, times(1)).sendUpdatedContractor(any(Contractor.class));
     }
 
 }
