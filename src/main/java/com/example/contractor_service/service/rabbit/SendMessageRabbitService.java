@@ -6,6 +6,8 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @Slf4j
 public class SendMessageRabbitService {
@@ -14,7 +16,12 @@ public class SendMessageRabbitService {
     private RabbitTemplate rabbitTemplate;
 
     public void sendUpdatedContractor(Contractor updated) {
-        rabbitTemplate.convertAndSend(updated);
+        String messageId = UUID.randomUUID().toString();
+
+        rabbitTemplate.convertAndSend(updated, message -> {
+            message.getMessageProperties().setMessageId(messageId);
+            return message;
+        });
         log.info("Contractor sent to the <<deals_contractor_queue>> queue");
     }
 
