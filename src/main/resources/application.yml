@@ -24,3 +24,6 @@ audit:
 #    topic: audit-log
 #    bootstrap:
 #      server: localhost:9092
+
+schedule:
+  delay: 5000

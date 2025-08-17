@@ -1,6 +1,7 @@
 package com.example.contractor_service.controller;
 
 import com.example.contractor_service.model.*;
+import com.example.contractor_service.service.outbox.OutboxMessageService;
 import com.example.contractor_service.service.rabbit.SendMessageRabbitService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +39,7 @@ public class ContractorControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoSpyBean
-    private SendMessageRabbitService sendMessageRabbitService;
+    private OutboxMessageService outboxMessageService;
 
     @Test
     @DisplayName("Должен создать нового контрагента и вернуть 201 CREATED")
@@ -60,7 +61,7 @@ public class ContractorControllerTest {
                 .andExpect(jsonPath("$.id").value("NEW_CONTR"))
                 .andExpect(jsonPath("$.name").value("Новый Контрагент"));
 
-        verify(sendMessageRabbitService, times(1)).sendUpdatedContractor(any(Contractor.class));
+        verify(outboxMessageService, times(1)).saveContractor(any(Contractor.class));
     }
 
     @Test
@@ -114,7 +115,7 @@ public class ContractorControllerTest {
                 .andExpect(jsonPath("$.industryName").value("Строительство"))
                 .andExpect(jsonPath("$.orgFormName").value("АО"));
 
-        verify(sendMessageRabbitService, times(2)).sendUpdatedContractor(any(Contractor.class));
+        verify(outboxMessageService, times(2)).saveContractor(any(Contractor.class));
     }
 
     @Test
@@ -185,7 +186,7 @@ public class ContractorControllerTest {
         SearchResponse response = objectMapper.readValue(result.getResponse().getContentAsString(), SearchResponse.class);
         assertThat(response.getContractors()).isEmpty();
         assertThat(response.getTotalElements()).isEqualTo(0);
-        verify(sendMessageRabbitService, times(1)).sendUpdatedContractor(any(Contractor.class));
+        verify(outboxMessageService, times(1)).saveContractor(any(Contractor.class));
     }
 
 }

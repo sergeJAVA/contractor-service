@@ -27,3 +27,10 @@ databaseChangeLog:
         path: 004_create_contractor_table.sql
         encoding: UTF-8
         relativeToChangeLogFile: true
+  - changeSet:
+      id: create_outbox_messages_table.sql
+      author: sergej
+      sqlFile:
+        path: 005_create_outbox_messages_table.sql
+        encoding: UTF-8
+        relativeToChangeLogFile: true
