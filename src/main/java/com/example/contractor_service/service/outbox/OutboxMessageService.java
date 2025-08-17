@@ -21,17 +21,23 @@ public class OutboxMessageService {
     private final ObjectMapper objectMapper;
 
     @Transactional
-    public void saveMessage(OutboxMessage message) {
-        outboxRepository.save(message);
-    }
-
-    public OutboxMessage createOutboxMessage(Contractor contractor) throws JsonProcessingException {
-        return OutboxMessage.builder()
+    public void saveContractor(Contractor contractor) {
+        OutboxMessage message = OutboxMessage.builder()
                 .messageId(UUID.randomUUID())
-                .payload(objectMapper.writeValueAsString(contractor))
+                .payload(writeAsString(contractor))
                 .status(MessageStatus.PENDING)
                 .sentAt(LocalDateTime.now())
                 .build();
+
+        outboxRepository.save(message);
+    }
+
+    private String writeAsString(Contractor contractor) {
+        try {
+            return objectMapper.writeValueAsString(contractor);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize contractor", e);
+        }
     }
 
 }

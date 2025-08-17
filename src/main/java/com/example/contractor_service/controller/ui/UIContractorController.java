@@ -6,7 +6,7 @@ import com.example.contractor_service.model.SearchResponse;
 import com.example.contractor_service.model.security.TokenAuthentication;
 import com.example.contractor_service.model.security.TokenData;
 import com.example.contractor_service.service.ContractorService;
-import com.example.contractor_service.service.rabbit.SendMessageRabbitService;
+import com.example.contractor_service.service.outbox.OutboxMessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -40,7 +40,7 @@ import java.util.Optional;
 public class UIContractorController {
 
     private final ContractorService contractorService;
-    private final SendMessageRabbitService sendMessageRabbitService;
+    private final OutboxMessageService outboxMessageService;
 
     @Operation(summary = "Получить контрагента по ID", description = "Возвращает информацию о контрагенте по его уникальному идентификатору, включая связанные данные.")
     @ApiResponses(value = {
@@ -85,7 +85,7 @@ public class UIContractorController {
         Contractor savedContractor = contractorService.save(contractor, tokenData.getId());
 
         Optional<Contractor> updated = contractorService.findById(savedContractor.getId());
-        updated.ifPresent(sendMessageRabbitService::sendUpdatedContractor);
+        updated.ifPresent(outboxMessageService::saveContractor);
 
         if (existingContractor.isEmpty()) {
             return new ResponseEntity<>(savedContractor, HttpStatus.CREATED);

@@ -7,3 +7,6 @@ spring:
   liquibase:
     change-log: classpath:/db/changelog/changelog-master.yaml
     drop-first: true
+
+scheduling:
+  enabled: false

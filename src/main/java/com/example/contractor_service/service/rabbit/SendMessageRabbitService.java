@@ -3,14 +3,18 @@ package com.example.contractor_service.service.rabbit;
 import com.example.contractor_service.model.Contractor;
 import com.example.contractor_service.model.outbox.MessageStatus;
 import com.example.contractor_service.model.outbox.OutboxMessage;
-import com.example.contractor_service.service.outbox.OutboxMessageService;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.example.contractor_service.repository.OutboxRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -19,38 +23,37 @@ public class SendMessageRabbitService {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
-    private final OutboxMessageService outboxMessageService;
+    private final OutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
+    @Scheduled(fixedDelayString = "${schedule.delay:5000}")
     @Transactional
-    public void sendUpdatedContractor(Contractor updated) {
-        OutboxMessage outboxMessage = null;
-        try {
-            outboxMessage = outboxMessageService.createOutboxMessage(updated);
-            outboxMessageService.saveMessage(outboxMessage);
+    public void sendUpdatedContractor() {
+        List<OutboxMessage> messages = outboxRepository
+                .findTop10ByStatusOrderBySentAtAsc(MessageStatus.PENDING);
 
-            String messageId = outboxMessage.getMessageId().toString();
-            rabbitTemplate.convertAndSend(updated, message -> {
-                message.getMessageProperties().setMessageId(messageId);
-                return message;
-            });
-            log.info("Contractor sent to the <<deals_contractor_queue>> queue, messageId={}", messageId);
+        if (messages.isEmpty()) {
+            return;
+        }
 
-            outboxMessage.setStatus(MessageStatus.SENT);
-            outboxMessageService.saveMessage(outboxMessage);
+        for (OutboxMessage outboxMessage : messages) {
+            try {
+                Contractor updated = objectMapper.readValue(outboxMessage.getPayload(), Contractor.class);
+                rabbitTemplate.convertAndSend(updated, message ->  {
+                    message.getMessageProperties().setMessageId(outboxMessage.getMessageId().toString());
+                    return message;
+                });
 
-        } catch (JsonProcessingException e) {
-            log.error("Failed to serialize Contractor for OutboxMessage", e);
-            if (outboxMessage != null) {
+                outboxMessage.setStatus(MessageStatus.SENT);
+                outboxMessage.setSentAt(LocalDateTime.now());
+                outboxRepository.save(outboxMessage);
+
+                log.info("Contractor sent to the <<deals_contractor_queue>> queue, messageId={}", outboxMessage.getMessageId());
+            } catch (Exception e) {
+
+                log.error("Failed to send outbox message {} to Rabbit", outboxMessage.getMessageId(), e);
                 outboxMessage.setStatus(MessageStatus.FAILED);
-                outboxMessageService.saveMessage(outboxMessage);
-            }
-            throw new RuntimeException(e);
-        } catch (Exception e) {
-            log.error("Failed to send Contractor to queue, messageId={}",
-                    outboxMessage != null ? outboxMessage.getMessageId() : null, e);
-            if (outboxMessage != null) {
-                outboxMessage.setStatus(MessageStatus.FAILED);
-                outboxMessageService.saveMessage(outboxMessage);
+                outboxRepository.save(outboxMessage);
             }
         }
     }
