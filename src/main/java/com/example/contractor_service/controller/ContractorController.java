@@ -42,6 +42,15 @@ public class ContractorController {
     private final ContractorService contractorService;
     private final OutboxMessageService outboxMessageService;
 
+    @Operation(summary = "Получить всех контрагентов",
+            description = "Возвращает список всех активных контрагентов со всей связанной информацией")
+    @ApiResponse(responseCode = "200", description = "Все контрагенты успешно получены",
+            content = @Content(mediaType = "application/json"))
+    @GetMapping("/all")
+    public ResponseEntity<List<Contractor>> findAll() {
+        return ResponseEntity.ok(contractorService.findAll());
+    }
+
     @Operation(summary = "Получить контрагента по ID", description = "Возвращает информацию о контрагенте по его уникальному идентификатору, включая связанные данные.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Контрагент успешно найден",

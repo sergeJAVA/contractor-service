@@ -23,5 +23,17 @@ services:
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
 
+  redis:
+    image: redis:latest
+    container_name: redis-contractor
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass pass
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+
 volumes:
   rabbitmq-data:
+  redis-data:

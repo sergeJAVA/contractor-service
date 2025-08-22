@@ -2,13 +2,14 @@ package com.example.contractor_service.controller;
 
 import com.example.contractor_service.model.*;
 import com.example.contractor_service.service.outbox.OutboxMessageService;
-import com.example.contractor_service.service.rabbit.SendMessageRabbitService;
+import com.example.contractor_service.testcontainers.TestContainers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -29,8 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD) // Перезагружаем контекст перед каждым методом
-public class ContractorControllerTest {
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+public class ContractorControllerTest extends TestContainers {
 
     @Autowired
     private MockMvc mockMvc;
@@ -40,6 +41,9 @@ public class ContractorControllerTest {
 
     @MockitoSpyBean
     private OutboxMessageService outboxMessageService;
+
+    @Autowired
+    private CacheManager cacheManager;
 
     @Test
     @DisplayName("Должен создать нового контрагента и вернуть 201 CREATED")
@@ -187,6 +191,44 @@ public class ContractorControllerTest {
         assertThat(response.getContractors()).isEmpty();
         assertThat(response.getTotalElements()).isEqualTo(0);
         verify(outboxMessageService, times(1)).saveContractor(any(Contractor.class));
+    }
+
+    @Test
+    @DisplayName("Должен кэшировать список всех контрагентов и очищать кэш при изменении")
+    void shouldCacheAllContractorsAndEvictOnChange() throws Exception {
+        assertThat(cacheManager.getCache("contractors").get("all")).isNull();
+
+        Contractor contractor = new Contractor();
+        contractor.setId("CACHE_TEST");
+        contractor.setName("Cache Test Contractor");
+        contractor.setCountryId("RUS");
+        contractor.setIndustryId(1);
+        contractor.setOrgFormId(1);
+
+        mockMvc.perform(put("/contractor/save")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(contractor)))
+                .andExpect(status().isCreated());
+
+        assertThat(cacheManager.getCache("contractors").get("all")).isNull();
+
+        MvcResult result = mockMvc.perform(get("/contractor/all"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertThat(cacheManager.getCache("contractors").get("all")).isNotNull();
+
+        MvcResult cachedResult = mockMvc.perform(get("/contractor/all"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertThat(cachedResult.getResponse().getContentAsString())
+                .isEqualTo(result.getResponse().getContentAsString());
+
+        mockMvc.perform(delete("/contractor/delete/{id}", "CACHE_TEST"))
+                .andExpect(status().isNoContent());
+
+        assertThat(cacheManager.getCache("contractors").get("all")).isNull();
     }
 
 }

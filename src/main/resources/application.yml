@@ -25,5 +25,10 @@ audit:
 #    bootstrap:
 #      server: localhost:9092
 
+redis:
+  host: localhost
+  port: 6379
+  password: pass
+
 schedule:
   delay: 5000

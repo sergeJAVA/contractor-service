@@ -30,6 +30,24 @@ public class ContractorRepository {
     }
 
     /**
+     * Получает список всех контрагентов со всей связанной информацией.
+     * @return список объектов {@link Contractor}.
+     */
+    public List<Contractor> findAll() {
+        String sql = "SELECT c.id, c.parent_id, c.name, c.name_full, c.inn, c.ogrn, " +
+                "c.country, c.industry, c.org_form, " +
+                "c.create_date, c.modify_date, c.create_user_id, c.modify_user_id, c.is_active, " +
+                "co.name AS country_name, i.name AS industry_name, o.name AS org_form_name " +
+                "FROM contractor c " +
+                "LEFT JOIN country co ON c.country = co.id " +
+                "LEFT JOIN industry i ON c.industry = i.id " +
+                "LEFT JOIN org_form o ON c.org_form = o.id " +
+                "WHERE c.is_active = TRUE";
+
+        return jdbcTemplate.query(sql, RowMappers.CONTRACTOR_ROW_MAPPER);
+    }
+
+    /**
      * Получает контрагента по его уникальному идентификатору (ID) со всей связанной информацией.
      * Использует JOIN для получения названий страны, индустрии и организационной формы.
      *
