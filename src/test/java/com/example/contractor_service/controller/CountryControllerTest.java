@@ -1,30 +1,36 @@
 package com.example.contractor_service.controller;
 import com.example.contractor_service.model.Country;
+import com.example.contractor_service.testcontainers.TestContainers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-class CountryControllerTest {
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+class CountryControllerTest extends TestContainers {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private CacheManager cacheManager;
 
     @Test
     @DisplayName("Должен создать новую страну и вернуть 200 OK")
@@ -83,6 +89,31 @@ class CountryControllerTest {
     void shouldReturnNotFoundIfCountryDoesNotExist() throws Exception {
         mockMvc.perform(get("/country/{id}", "NONEXIST"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Должен кэшировать все страны и сброс после изменения")
+    void testCountryCaching() throws Exception {
+        Country country = new Country("TTT", "Cache test");
+
+        mockMvc.perform(put("/country/save")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(country)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/country/all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value("TTT"));
+
+        assertThat(cacheManager.getCache("countries").get("all")).isNotNull();
+
+        country.setName("TTT Updated");
+        mockMvc.perform(put("/country/save")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(country)))
+                .andExpect(status().isOk());
+
+        assertThat(cacheManager.getCache("countries").get("all")).isNull();
     }
 
 }

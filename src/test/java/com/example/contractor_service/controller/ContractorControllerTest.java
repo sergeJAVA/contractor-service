@@ -2,13 +2,14 @@ package com.example.contractor_service.controller;
 
 import com.example.contractor_service.model.*;
 import com.example.contractor_service.service.outbox.OutboxMessageService;
-import com.example.contractor_service.service.rabbit.SendMessageRabbitService;
+import com.example.contractor_service.testcontainers.TestContainers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -29,8 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD) // Перезагружаем контекст перед каждым методом
-public class ContractorControllerTest {
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+public class ContractorControllerTest extends TestContainers {
 
     @Autowired
     private MockMvc mockMvc;

@@ -14,6 +14,8 @@ import java.util.Optional;
  */
 public interface ContractorService {
 
+    List<Contractor> findAll();
+
     /**
      * Находит контрагента по его уникальному идентификатору.
      *

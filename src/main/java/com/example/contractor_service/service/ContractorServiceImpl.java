@@ -4,6 +4,7 @@ import com.example.contractor_service.model.Contractor;
 import com.example.contractor_service.repository.ContractorRepository;
 import com.webbee.audit_lib.annotation.AuditLog;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.logging.LogLevel;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,6 +16,11 @@ import java.util.Optional;
 public class ContractorServiceImpl implements ContractorService {
 
     private final ContractorRepository contractorRepository;
+
+    @Override
+    public List<Contractor> findAll() {
+        return contractorRepository.findAll();
+    }
 
     @Override
     public Optional<Contractor> findById(String id) {
@@ -34,6 +40,7 @@ public class ContractorServiceImpl implements ContractorService {
     }
 
     @Override
+    @AuditLog(logLevel = LogLevel.INFO)
     public int delete(String id) {
         return contractorRepository.delete(id);
     }

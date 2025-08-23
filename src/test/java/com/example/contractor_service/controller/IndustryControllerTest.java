@@ -1,31 +1,37 @@
 package com.example.contractor_service.controller;
 
 import com.example.contractor_service.model.Industry;
+import com.example.contractor_service.testcontainers.TestContainers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-class IndustryControllerTest {
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+class IndustryControllerTest extends TestContainers {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private CacheManager cacheManager;
 
     @Test
     @DisplayName("Должен создать новую отрасль и вернуть 200 OK")
@@ -100,6 +106,28 @@ class IndustryControllerTest {
         // Проверяем, что отрасль полностью удалена
         mockMvc.perform(get("/industry/{id}", 105))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Кэшированное получение всех индустрий и сброс после удаления")
+    void testIndustryCaching() throws Exception {
+        Industry industry = new Industry(101, "TEST");
+
+        mockMvc.perform(put("/industry/save")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(industry)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/industry/all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("TEST"));
+
+        assertThat(cacheManager.getCache("industries").get("all")).isNotNull();
+
+        mockMvc.perform(delete("/industry/delete/{id}", 101))
+                .andExpect(status().isNoContent());
+
+        assertThat(cacheManager.getCache("industries").get("all")).isNull();
     }
 
 }
